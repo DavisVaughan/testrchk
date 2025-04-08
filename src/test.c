@@ -4,42 +4,42 @@
 #include <stdlib.h> // for NULL
 #include <R_ext/Rdynload.h>
 
-void r_list_poke(SEXP x, R_xlen_t i, SEXP value) {
-    // PROTECT(x);
+void r_fancy_list_setter(SEXP x, R_xlen_t i, SEXP value) {
+    // Imagine other stuff happens in here besides just `SET_VECTOR_ELT()`
     SET_VECTOR_ELT(x, i, value);
-    // UNPROTECT(1);
 }
 
-SEXP ffi_make_list(void) {
-    // Allocate and protect `out` list
-    SEXP out = PROTECT(Rf_allocVector(VECSXP, 1));
+SEXP ffi_make_list_false_positive(void) {
+    SEXP out = PROTECT(Rf_allocVector(VECSXP, 2));
 
-    // Allocate element of the `out` list and immediately place it in the list,
-    // which protects it so we don't have to
     // NOTE: rchk does not seem to think `elt` is protected here.
     SEXP elt = Rf_allocVector(INTSXP, 2);
-    r_list_poke(out, 0, elt);
-    // PROTECT(elt);
-    // SET_VECTOR_ELT(out, 0, elt);
-    // UNPROTECT(1);
+    r_fancy_list_setter(out, 0, elt);
 
-    SET_INTEGER_ELT(elt, 0, 1);
-    SET_INTEGER_ELT(elt, 1, 2);
-
-    // Allocate `names` and set as the names of `elt`.
     // NOTE: The allocation here is when rchk complains about `elt` being unprotected
-    SEXP names = Rf_allocVector(STRSXP, 2);
-    Rf_setAttrib(elt, R_NamesSymbol, names);
+    SEXP elt2 = Rf_allocVector(INTSXP, 2);
+    r_fancy_list_setter(out, 1, elt2);
 
-    SET_STRING_ELT(names, 0, Rf_mkCharCE("x", CE_UTF8));
-    SET_STRING_ELT(names, 1, Rf_mkCharCE("y", CE_UTF8));
+    UNPROTECT(1);
+    return out;
+}
+
+SEXP ffi_make_list_ok(void) {
+    SEXP out = PROTECT(Rf_allocVector(VECSXP, 2));
+
+    SEXP elt = Rf_allocVector(INTSXP, 2);
+    SET_VECTOR_ELT(out, 0, elt);
+
+    SEXP elt2 = Rf_allocVector(INTSXP, 2);
+    SET_VECTOR_ELT(out, 1, elt2);
 
     UNPROTECT(1);
     return out;
 }
 
 static const R_CallMethodDef CallEntries[] = {
-  {"ffi_make_list",         (DL_FUNC) &ffi_make_list, 0},
+  {"ffi_make_list_false_positive",         (DL_FUNC) &ffi_make_list_false_positive, 0},
+  {"ffi_make_list_ok",         (DL_FUNC) &ffi_make_list_ok, 0},
   {NULL, NULL, 0}
 };
 
