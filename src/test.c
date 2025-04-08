@@ -5,9 +5,9 @@
 #include <R_ext/Rdynload.h>
 
 void r_list_poke(SEXP x, R_xlen_t i, SEXP value) {
-    PROTECT(x);
+    // PROTECT(x);
     SET_VECTOR_ELT(x, i, value);
-    UNPROTECT(1);
+    // UNPROTECT(1);
 }
 
 SEXP ffi_make_list(void) {
@@ -18,10 +18,10 @@ SEXP ffi_make_list(void) {
     // which protects it so we don't have to
     // NOTE: rchk does not seem to think `elt` is protected here.
     SEXP elt = Rf_allocVector(INTSXP, 2);
-    // r_list_poke(out, 0, elt);
-    PROTECT(elt);
-    SET_VECTOR_ELT(out, 0, elt);
-    UNPROTECT(1);
+    r_list_poke(out, 0, elt);
+    // PROTECT(elt);
+    // SET_VECTOR_ELT(out, 0, elt);
+    // UNPROTECT(1);
 
     SET_INTEGER_ELT(elt, 0, 1);
     SET_INTEGER_ELT(elt, 1, 2);
